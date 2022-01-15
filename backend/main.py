@@ -3,7 +3,7 @@ import glob
 from autocrop import Cropper
 import numpy as np
 import cv2
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import time
 import os
 from supabase import create_client, Client
@@ -191,7 +191,7 @@ def uploadGifToStorage():
         data=multipart_data,
     )
 
-    return f'https://gbpohqmsjdcrrrwshczg.supabase.in/storage/v1/object/public/{response.json()["Key"]}'
+    return f'{SUPABASE_URL.replace("co", "in")}/storage/v1/object/public/{response.json()["Key"]}'
 
 
 def addNewParrotToDatabase(imageUrl):
@@ -213,7 +213,31 @@ CORS(app)
 
 @ app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    data = {
+        "powered_by": "https://github.com/highlight-run/party-parrot-as-a-service",
+        "managed_by": "https://github.com/HarryET",
+        "urls": {
+            "web_ui": "https://party.harryet.xyz",
+            "api": "https://party.harryet.xyz/api",
+            "create_parrot": "https://party.harryet.xyz/api/parrot",
+            "meta": "https://party.harryet.xyz/api/meta"
+        },
+        "version": "0.1"
+    }
+  
+    return jsonify(data)
+
+@ app.route("/meta")
+def meta():
+    parrots = supabase.table('parrots').select("id").execute()
+    servers = supabase.table('servers').select("id").execute()
+
+    data = {
+        "parrots": len(parrots[0]),
+        "servers": len(servers[0])
+    }
+  
+    return jsonify(data)
 
 
 TEMPLATE_TYPES = {'a', 'b', 'c', 'd'}
